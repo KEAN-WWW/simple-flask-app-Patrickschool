@@ -1,0 +1,70 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Flask Main Test
+      id: flask-main-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Flask Main Test
+        setup-command: pip install -r requirements.txt
+        command: pytest tests/test_main.py --pylint
+        timeout: 10
+        max-score: 10
+    - name: Flask New Test
+      id: flask-new-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Flask New Test
+        setup-command: pip install -r requirements.txt
+        command: pytest tests/test_new_page.py --pylint
+        timeout: 10
+        max-score: 10
+    - name: None Test
+      id: none-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: None Test
+        setup-command: pip install -r requirements.txt
+        command: pytest tests/test_none_user.py --pylint
+        timeout: 10
+        max-score: 10
+    - name: Valid User Test
+      id: valid-user-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Valid User Test
+        setup-command: pip install -r requirements.txt
+        command: pytest tests/test_not_valid_user.py --pylint
+        timeout: 10
+        max-score: 10
+    - name: Not Valid Test
+      id: not-valid-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Not Valid Test
+        setup-command: pip install -r requirements.txt
+        command: pytest tests/test_valid_user.py --pylint
+        timeout: 10
+        max-score: 10
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        FLASK-MAIN-TEST_RESULTS: "${{steps.flask-main-test.outputs.result}}"
+        FLASK-NEW-TEST_RESULTS: "${{steps.flask-new-test.outputs.result}}"
+        NONE-TEST_RESULTS: "${{steps.none-test.outputs.result}}"
+        VALID-USER-TEST_RESULTS: "${{steps.valid-user-test.outputs.result}}"
+        NOT-VALID-TEST_RESULTS: "${{steps.not-valid-test.outputs.result}}"
+      with:
+        runners: flask-main-test,flask-new-test,none-test,valid-user-test,not-valid-test
